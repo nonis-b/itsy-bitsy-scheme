@@ -1,0 +1,9 @@
+[package]
+
+name = "hello_welt"
+version = "0.0.1"
+authors = [ "Tapire" ]
+
+[lib]
+
+name = "tokenizer"

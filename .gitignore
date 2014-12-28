@@ -3,6 +3,9 @@
 *.so
 *.rlib
 *.dll
+.DS_Store
+*~
+*.lock
 
 # Executables
 *.exe
