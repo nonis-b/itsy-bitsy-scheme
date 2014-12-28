@@ -97,12 +97,51 @@ mod test {
     }
 
     #[test]
-    fn two_outer_parens_list() {
+    fn no_outer_parens_list() {
         let expected_list = vec!(
             EvalItem::Value("hej".to_string()),
             EvalItem::Value("hoj".to_string()),
             EvalItem::Value("hå".to_string()));
         let expr = "hej hoj hå)".to_string();
+        let (index, item) = build_list(&tokenize(&expr), 0);
+        match item {
+            EvalItem::List(n) => {
+                assert_eq!(expected_list, n);
+            },
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn two_outer_parens_list() {
+        let expected_list = vec!(EvalItem::List(vec!(
+            EvalItem::Value("hej".to_string()),
+            EvalItem::Value("hoj".to_string()),
+            EvalItem::Value("hå".to_string()))), EvalItem::List(vec!(
+            EvalItem::Value("hi".to_string()),
+            EvalItem::Value("hi".to_string()))));
+        let expr = "(hej hoj hå) (hi hi)".to_string();
+        let (index, item) = build_list(&tokenize(&expr), 0);
+        match item {
+            EvalItem::List(n) => {
+                assert_eq!(expected_list, n);
+            },
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn nested_parens_list() {
+        let expected_list = vec!(EvalItem::List(vec!(
+            EvalItem::Value("hej".to_string()),
+            EvalItem::Value("hoj".to_string()),
+            EvalItem::List(vec!(
+                EvalItem::List(vec!(
+                    EvalItem::Value("yes".to_string()),
+                    EvalItem::Value("yikes".to_string()))),
+                EvalItem::Value("japp".to_string()),
+                EvalItem::Value("jopp".to_string()))))));
+        let expr = "(hej hoj ( (yes yikes) japp jopp))".to_string();
         let (index, item) = build_list(&tokenize(&expr), 0);
         match item {
             EvalItem::List(n) => {
