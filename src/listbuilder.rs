@@ -1,60 +1,11 @@
-use std::fmt;
-
-enum EvalItem {
-    List(Vec<EvalItem>),
-    Value(String),
-    Lambda,
-    Empty,
-}
-
-impl fmt::Show for EvalItem {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            List(ref n) => write!(f, "[{}]", n),
-            Value(ref n) => write!(f, "<{}>", *n),
-            Lambda => write!(f, "Lambda"),
-            Empty => write!(f, "Empty"),
-        }
-    }
-}
-
-impl PartialEq for EvalItem {
-    fn eq(&self, other: &EvalItem) -> bool {
-        match *self {
-            List(ref n) => {
-                match *other {
-                    List(ref o) => n == o,                    
-                    _ => false,
-                }
-            },
-            Value(ref n) => {
-                match *other {
-                    Value(ref o) => n == o,                    
-                    _ => false,
-                }
-            },
-            Lambda => {
-                match *other {
-                    Lambda => true,                    
-                    _ => false,
-                }
-            },
-            Empty => {
-                match *other {
-                    Empty => true,                    
-                    _ => false,
-                }
-            },
-        }
-    }
-}
+use evalitem::EvalItem;
 
 fn build_list(tokens: &Vec<String>, index_init: uint) -> (uint, EvalItem) {
-    if tokens.is_empty() { return (0, Empty) }
+    if tokens.is_empty() { return (0, EvalItem::Empty) }
     let mut item = vec![];
     let mut index = index_init;
     loop {
-        if index >= tokens.len() { return (index, List(item)) }
+        if index >= tokens.len() { return (index, EvalItem::List(item)) }
         let token_chars = tokens[index].as_slice();
         match token_chars {
             "(" => {
@@ -63,21 +14,21 @@ fn build_list(tokens: &Vec<String>, index_init: uint) -> (uint, EvalItem) {
                 item.push(new_item);
             },
             ")" => {                
-                return (index, List(item))
+                return (index, EvalItem::List(item))
             },
             _ => {
-                item.push(Value(token_chars.to_string()));
+                item.push(EvalItem::Value(token_chars.to_string()));
             },
         }
         index = index + 1;
     }
-    (0, Empty)
+    (0, EvalItem::Empty)
 }
 
 #[cfg(test)]
 mod test {
     use super::build_list;
-    use super::EvalItem;
+    use evalitem::EvalItem;
     use tokenizer::tokenize;
     
     #[test]
