@@ -1,4 +1,4 @@
 itsy-bitsy-scheme
 =================
 
-Scheme interpreter
+Scheme interpreter, made for learning the Rust language.
