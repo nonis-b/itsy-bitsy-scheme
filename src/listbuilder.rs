@@ -51,16 +51,16 @@ impl PartialEq for EvalItem {
 
 fn build_list(tokens: &Vec<String>, index_init: uint) -> (uint, EvalItem) {
     if tokens.is_empty() { return (0, Empty) }
-    
     let mut item = vec![];
-
     let mut index = index_init;
     loop {
         if index >= tokens.len() { return (index, List(item)) }
         let token_chars = tokens[index].as_slice();
         match token_chars {
             "(" => {
-                let (index, new_item) = build_list(tokens, index + 1);
+                let (index_updated, new_item) = build_list(tokens, index + 1);
+                index = index_updated;
+                item.push(new_item);
             },
             ")" => {                
                 return (index, List(item))
@@ -81,12 +81,28 @@ mod test {
     use tokenizer::tokenize;
     
     #[test]
-    fn stuff() {
+    fn flat_list() {
+        let expected_list = vec!(EvalItem::List(vec!(
+            EvalItem::Value("hej".to_string()),
+            EvalItem::Value("hoj".to_string()),
+            EvalItem::Value("hå".to_string()))));
+        let expr = "(hej hoj hå)".to_string();
+        let (index, item) = build_list(&tokenize(&expr), 0);
+        match item {
+            EvalItem::List(n) => {
+                assert_eq!(expected_list, n);
+            },
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn two_outer_parens_list() {
         let expected_list = vec!(
             EvalItem::Value("hej".to_string()),
             EvalItem::Value("hoj".to_string()),
             EvalItem::Value("hå".to_string()));
-        let expr = "(hej hoj hå)".to_string();        
+        let expr = "hej hoj hå)".to_string();
         let (index, item) = build_list(&tokenize(&expr), 0);
         match item {
             EvalItem::List(n) => {

@@ -70,4 +70,14 @@ mod test {
                                 "hoj".to_string(),
                                 ")".to_string()));
     }
+
+    #[test]
+    fn tokenize_no_paren() {
+        let input = "hej hå hoj)".to_string();
+        let tokens = tokenize(&input);
+        assert_eq!(tokens, vec!("hej".to_string(),
+                                "hå".to_string(),
+                                "hoj".to_string(),
+                                ")".to_string())); // bit strange, its only pushed if ends with paren.
+    }
 }
