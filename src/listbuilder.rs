@@ -57,11 +57,11 @@ impl PartialEq for EvalItem {
     }
 }
 
-fn build_list(tokens: Vec<String>, index: int) -> EvalItem {
+fn build_list(tokens: Vec<String>) -> EvalItem {
     if tokens.is_empty() { return Empty }
 
     let mut stack = vec![];
-    let mut root: EvalItem = List(vec![]);
+    let root: EvalItem = List(vec![]);
     stack.push(root);
     
     for token in tokens.iter() {
@@ -71,11 +71,11 @@ fn build_list(tokens: Vec<String>, index: int) -> EvalItem {
             ")" => assert!(true),
             _ => {
                 match stack.pop() {
-                    Some(stackItem) => {
-                        match stackItem {
-                            List(mut listOld) => {
-                                listOld.push(EvalItem::Value(chars.to_string()));
-                                stack.push(List(listOld));
+                    Some(stack_item) => {
+                        match stack_item {
+                            List(mut list) => {
+                                list.push(EvalItem::Value(chars.to_string()));
+                                stack.push(List(list));
                             },
                             _ => panic!("Shouldn't happen!")
                         }
@@ -99,14 +99,14 @@ mod test {
     
     #[test]
     fn stuff() {
-        let expectedList = vec!(
+        let expected_list = vec!(
             EvalItem::Value("hej".to_string()),
             EvalItem::Value("hoj".to_string()),
             EvalItem::Value("hå".to_string()));
         let expr = "(hej hoj hå)".to_string();
-        match build_list(tokenize(&expr), 0) {
+        match build_list(tokenize(&expr)) {
             EvalItem::List(n) => {
-                assert_eq!(expectedList, n);
+                assert_eq!(expected_list, n);
             },
             _ => assert!(false),
         }
