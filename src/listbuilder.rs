@@ -49,38 +49,29 @@ impl PartialEq for EvalItem {
     }
 }
 
-fn build_list(tokens: Vec<String>) -> EvalItem {
-    if tokens.is_empty() { return Empty }
-
-    let mut stack = vec![];
-    let root: EvalItem = List(vec![]);
-    stack.push(root);
+fn build_list(tokens: &Vec<String>, index_init: uint) -> (uint, EvalItem) {
+    if tokens.is_empty() { return (0, Empty) }
     
-    for token in tokens.iter() {
-        let chars = token.as_slice();
-        match chars {
-            "(" => assert!(true),
-            ")" => assert!(true),
+    let mut item = vec![];
+
+    let mut index = index_init;
+    loop {
+        if index >= tokens.len() { return (index, List(item)) }
+        let token_chars = tokens[index].as_slice();
+        match token_chars {
+            "(" => {
+                let (index, new_item) = build_list(tokens, index + 1);
+            },
+            ")" => {                
+                return (index, List(item))
+            },
             _ => {
-                match stack.pop() {
-                    Some(stack_item) => {
-                        match stack_item {
-                            List(mut list) => {
-                                list.push(EvalItem::Value(chars.to_string()));
-                                stack.push(List(list));
-                            },
-                            _ => panic!("Shouldn't happen!")
-                        }
-                    },
-                    None => panic!("Shouldn't get here!"),
-                }
-            },            
+                item.push(Value(token_chars.to_string()));
+            },
         }
+        index = index + 1;
     }
-    match stack.pop() {
-        Some(n) => n,
-        None => Empty,
-    }
+    (0, Empty)
 }
 
 #[cfg(test)]
@@ -95,8 +86,9 @@ mod test {
             EvalItem::Value("hej".to_string()),
             EvalItem::Value("hoj".to_string()),
             EvalItem::Value("hå".to_string()));
-        let expr = "(hej hoj hå)".to_string();
-        match build_list(tokenize(&expr)) {
+        let expr = "(hej hoj hå)".to_string();        
+        let (index, item) = build_list(&tokenize(&expr), 0);
+        match item {
             EvalItem::List(n) => {
                 assert_eq!(expected_list, n);
             },
