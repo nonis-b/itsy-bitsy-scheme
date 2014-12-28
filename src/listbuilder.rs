@@ -10,8 +10,8 @@ enum EvalItem {
 impl fmt::Show for EvalItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            List(ref n) => write!(f, "List"),
-            Value(ref n) => write!(f, "Value {}", *n),
+            List(ref n) => write!(f, "[{}]", n),
+            Value(ref n) => write!(f, "<{}>", *n),
             Lambda => write!(f, "Lambda"),
             Empty => write!(f, "Empty"),
         }
