@@ -23,33 +23,25 @@ impl PartialEq for EvalItem {
         match *self {
             List(ref n) => {
                 match *other {
-                    List(ref o) => {
-                        n == o
-                    },
+                    List(ref o) => n == o,                    
                     _ => false,
                 }
             },
             Value(ref n) => {
                 match *other {
-                    Value(ref o) => {
-                        n == o
-                    },
+                    Value(ref o) => n == o,                    
                     _ => false,
                 }
             },
             Lambda => {
                 match *other {
-                    Lambda => {
-                        true
-                    },
+                    Lambda => true,                    
                     _ => false,
                 }
             },
             Empty => {
                 match *other {
-                    Empty => {
-                        true
-                    },
+                    Empty => true,                    
                     _ => false,
                 }
             },
