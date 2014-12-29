@@ -1,3 +1,4 @@
+mod evaluator;
 mod environment;
 mod evalitem;
 mod tokenizer;

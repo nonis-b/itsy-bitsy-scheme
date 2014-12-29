@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[deriving(Clone)]
 pub enum EvalItem {
     List(Vec<EvalItem>),
     Value(String),

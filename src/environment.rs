@@ -2,21 +2,21 @@ use evalitem::EvalItem;
 use std::collections::HashMap;
 
 pub struct Environment {
-    vars: HashMap<String, EvalItem>,
-    outer: Option<Box<Environment>>,
+    pub vars: HashMap<String, EvalItem>,
+    pub outer: Option<Box<Environment>>,
 }
 
 impl Environment {
-    fn add(&mut self, name: &str, value: EvalItem) {
+    pub fn add(&mut self, name: &str, value: EvalItem) {
         self.vars.insert(name.to_string(), value);
     }
 
-    fn find_value(&self, name: &str) -> Option<&EvalItem> {
+    pub fn find_value(&self, name: &str) -> Option<&EvalItem> {
         if !self.vars.contains_key(&name.to_string()) { return None; }
         Some(&self.vars[name.to_string()])
     }
 
-    fn find_environment_with_var(&self, name: &str) -> Option<&Environment> {
+    pub fn find_environment_with_var(&self, name: &str) -> Option<&Environment> {
         if self.find_value(name).is_some() { return Some(self); }
         match self.outer {
             Some(ref n) => n.find_environment_with_var(name),
