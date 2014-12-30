@@ -78,7 +78,7 @@ mod test {
     }
 
     #[test]
-    fn evaluate_define() {
+    fn evaluate_define_value() {
         let mut env = box Environment { vars: HashMap::new(), outer: None };
         let item = EvalItem::List(vec!(
             EvalItem::Value("define".to_string()),
@@ -86,5 +86,23 @@ mod test {
             EvalItem::Value("einz".to_string())));
         assert_eq!(EvalItem::Empty, evaluate(item, &mut env));
         assert_eq!(EvalItem::Value("einz".to_string()), *env.find_value("one").unwrap());
+    }
+
+    #[test]
+    fn evaluate_define_solve() {
+        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let item = EvalItem::List(vec!(
+            EvalItem::Value("define".to_string()),
+            EvalItem::Value("one".to_string()),
+            EvalItem::Value("einz".to_string())));
+        assert_eq!(EvalItem::Empty, evaluate(item, &mut env));
+        assert_eq!(EvalItem::Value("einz".to_string()), *env.find_value("one").unwrap());
+
+        let item = EvalItem::List(vec!(
+            EvalItem::Value("define".to_string()),
+            EvalItem::Value("yksi".to_string()),
+            EvalItem::Value("one".to_string())));
+        assert_eq!(EvalItem::Empty, evaluate(item, &mut env));
+        assert_eq!(EvalItem::Value("einz".to_string()), *env.find_value("yksi").unwrap());
     }
 }
