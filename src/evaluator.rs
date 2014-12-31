@@ -61,6 +61,30 @@ pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
                                 let lambda_item = EvalItem::Lambda(box lambda_def);
                                 return lambda_item;
                             },
+                            "if" => {
+                                if list.len() != 4 {
+                                    panic!("if takes 3 arguments.");
+                                }
+                                let test_list = match list[1] {
+                                    EvalItem::List(ref items) => items,
+                                    _ => panic!("Not a list!"),
+                                };
+                                let consec_list = match list[2] {
+                                    EvalItem::List(ref items) => items,
+                                    _ => panic!("Not a list!"),
+                                };
+                                let alt_list = match list[3] {
+                                    EvalItem::List(ref items) => items,
+                                    _ => panic!("Not a list!"),
+                                };
+                                let test_result =
+                                    evaluate(EvalItem::List(test_list.clone()), env);
+                                if test_result == EvalItem::Empty {
+                                    return evaluate(EvalItem::List(alt_list.clone()), env);
+                                } else {
+                                    return evaluate(EvalItem::List(consec_list.clone()), env);
+                                }                                 
+                            },
                             _ => panic!("Unknown keyword!"),
                         }
                     },
@@ -151,6 +175,28 @@ mod test {
             environment: env.clone(),
         };
         assert_eq!(EvalItem::Lambda(expected_lambda), evaluate(item, &mut env));
-//        assert_eq!(EvalItem::Value("ett".to_string()), *env.find_value("one").unwrap());
     }
+
+    #[test]
+    fn evaluate_if_true() {
+        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let item_with_if = EvalItem::List(vec!(
+            EvalItem::Value("if".to_string()),
+            EvalItem::List(vec!(
+                EvalItem::Value("quote".to_string()),
+                EvalItem::Value("one".to_string()),
+                )),
+            EvalItem::List(vec!(
+                EvalItem::Value("quote".to_string()),
+                EvalItem::Value("yes!".to_string()))),
+            EvalItem::List(vec!(
+                EvalItem::Value("quote".to_string()),
+                EvalItem::Value("no!".to_string()))),
+            ));
+
+        let expected = EvalItem::List(vec!(
+                EvalItem::Value("yes!".to_string())));
+        assert_eq!(expected, evaluate(item_with_if, &mut env));
+    }
+
 }
