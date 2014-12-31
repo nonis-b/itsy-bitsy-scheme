@@ -1,3 +1,4 @@
+use evalitem::LambdaDefinition;
 use evalitem::EvalItem;
 use environment::Environment;
 
@@ -10,7 +11,8 @@ pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
             EvalItem::Value(ref value) => {
                 match env.find_environment_with_var(value.as_slice()) {
                     Some(env_with_var) =>
-                        return env_with_var.find_value(value.as_slice()).unwrap().clone(),
+                        return env_with_var.find_value(
+                            value.as_slice()).unwrap().clone(),
                     None => return item.clone(),
                 }
             },
@@ -38,6 +40,27 @@ pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
                                 env.add(name_to_add.as_slice(), item_to_add);
                                 return EvalItem::Empty;
                             },
+                            "lambda" => {
+                                if list.len() != 3 {
+                                    panic!("lambda takes 2 arguments.");
+                                }
+                                let arguments_list = match list[1] {
+                                    EvalItem::List(ref args) => args,
+                                    _ => panic!("Not a list!"),
+                                };
+                                let body_list = match list[2] {
+                                    EvalItem::List(ref items) => items,
+                                    _ => panic!("Not a list!"),
+                                };
+                                let body_item = EvalItem::List(body_list.clone());
+                                let lambda_def = LambdaDefinition {
+                                    arguments: arguments_list.clone(),
+                                    body: body_item,
+                                    environment: env.clone(),
+                                };
+                                let lambda_item = EvalItem::Lambda(box lambda_def);
+                                return lambda_item;
+                            },
                             _ => panic!("Unknown keyword!"),
                         }
                     },
@@ -53,6 +76,7 @@ pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
 mod test {
     use super::evaluate;
     use evalitem::EvalItem;
+    use evalitem::LambdaDefinition;
     use environment::Environment;
     use std::collections::HashMap;
     
@@ -104,5 +128,29 @@ mod test {
             EvalItem::Value("one".to_string())));
         assert_eq!(EvalItem::Empty, evaluate(item, &mut env));
         assert_eq!(EvalItem::Value("einz".to_string()), *env.find_value("yksi").unwrap());
+    }
+
+    #[test]
+    fn evaluate_lambda_definition() {
+        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let item = EvalItem::List(vec!(
+            EvalItem::Value("lambda".to_string()),
+            EvalItem::List(vec!(
+                EvalItem::Value("arg1".to_string()),
+                EvalItem::Value("arg2".to_string()))),
+            EvalItem::List(vec!(
+                EvalItem::Value("one".to_string()))),
+            ));
+
+        let expected_lambda = box LambdaDefinition {
+            arguments: vec!(
+                EvalItem::Value("arg1".to_string()),
+                EvalItem::Value("arg2".to_string())),
+            body: EvalItem::List(vec!(
+                EvalItem::Value("one".to_string()))),
+            environment: env.clone(),
+        };
+        assert_eq!(EvalItem::Lambda(expected_lambda), evaluate(item, &mut env));
+//        assert_eq!(EvalItem::Value("ett".to_string()), *env.find_value("one").unwrap());
     }
 }

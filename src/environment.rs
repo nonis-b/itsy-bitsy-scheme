@@ -1,6 +1,7 @@
 use evalitem::EvalItem;
 use std::collections::HashMap;
 
+#[deriving(Clone, PartialEq)]
 pub struct Environment {
     pub vars: HashMap<String, EvalItem>,
     pub outer: Option<Box<Environment>>,
