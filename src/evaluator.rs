@@ -2,89 +2,99 @@ use evalitem::LambdaDefinition;
 use evalitem::EvalItem;
 use environment::Environment;
 
+fn evaluate_quote(list: &Vec<EvalItem>) -> EvalItem {
+    if list.len() == 1 { return EvalItem::Empty; }
+    let mut quoted = list.clone();
+    quoted.remove(0);
+    return EvalItem::List(quoted);
+}
+
+fn evaluate_define(list: &Vec<EvalItem>, env: &mut Box<Environment>) -> EvalItem {
+    if list.len() != 3 {
+        panic!("define takes 2 arguments.");
+    }
+    let item_to_evaluate = list[2].clone();
+    let item_to_add = evaluate(item_to_evaluate, env);
+    let name_to_add = match list[1].clone() {
+        EvalItem::Value(val) => val,
+        _ => panic!("Must give string as name!"),
+    };
+    env.add(name_to_add.as_slice(), item_to_add);
+    return EvalItem::Empty;
+}
+
+fn evaluate_lambda(list: &Vec<EvalItem>, env: &mut Box<Environment>) -> EvalItem {
+    if list.len() != 3 {
+        panic!("lambda takes 2 arguments.");
+    }
+    let arguments_list = match list[1] {
+        EvalItem::List(ref args) => args,
+        _ => panic!("Not a list!"),
+    };
+    let body_list = match list[2] {
+        EvalItem::List(ref items) => items,
+        _ => panic!("Not a list!"),
+    };
+    let body_item = EvalItem::List(body_list.clone());
+    let lambda_def = LambdaDefinition {
+        arguments: arguments_list.clone(),
+        body: body_item,
+        environment: env.clone(),
+    };
+    let lambda_item = EvalItem::Lambda(box lambda_def);
+    return lambda_item;
+}
+
+fn evaluate_if(list: &Vec<EvalItem>, env: &mut Box<Environment>) -> EvalItem {
+    if list.len() != 4 {
+        panic!("if takes 3 arguments.");
+    }
+    let test_list = match list[1] {
+        EvalItem::List(ref items) => items,
+        _ => panic!("Not a list!"),
+    };
+    let consec_list = match list[2] {
+        EvalItem::List(ref items) => items,
+        _ => panic!("Not a list!"),
+    };
+    let alt_list = match list[3] {
+        EvalItem::List(ref items) => items,
+        _ => panic!("Not a list!"),
+    };
+    let test_result =
+        evaluate(EvalItem::List(test_list.clone()), env);
+    if test_result == EvalItem::Empty {
+        return evaluate(EvalItem::List(alt_list.clone()), env);
+    } else {
+        return evaluate(EvalItem::List(consec_list.clone()), env);
+    }
+}
+
+fn evaluate_value(item: &EvalItem, value: &String, env: &mut Box<Environment>) -> EvalItem {
+    match env.find_environment_with_var(value.as_slice()) {
+        Some(env_with_var) =>
+            return env_with_var.find_value(
+                value.as_slice()).unwrap().clone(),
+        None => return item.clone(),
+    }
+}
+
 pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
     let mut loops = 0i;
     loop {
         if loops > 100 { panic!("Max recursion reached!"); }
 
         match item {
-            EvalItem::Value(ref value) => {
-                match env.find_environment_with_var(value.as_slice()) {
-                    Some(env_with_var) =>
-                        return env_with_var.find_value(
-                            value.as_slice()).unwrap().clone(),
-                    None => return item.clone(),
-                }
-            },
+            EvalItem::Value(ref value) => return evaluate_value(&item, value, env),
             EvalItem::List(ref list) => {
                 if list.is_empty() { return EvalItem::Empty; }
                 match list[0] {
                     EvalItem::Value(ref keyword) => {
                         match keyword.as_slice() {
-                            "quote" => {
-                                if list.len() == 1 { return EvalItem::Empty; }
-                                let mut quoted = list.clone();
-                                quoted.remove(0);
-                                return EvalItem::List(quoted);
-                            },
-                            "define" => {
-                                if list.len() != 3 {
-                                    panic!("define takes 2 arguments.");
-                                }
-                                let item_to_evaluate = list[2].clone();
-                                let item_to_add = evaluate(item_to_evaluate, env);
-                                let name_to_add = match list[1].clone() {
-                                    EvalItem::Value(val) => val,
-                                    _ => panic!("Must give string as name!"),
-                                };
-                                env.add(name_to_add.as_slice(), item_to_add);
-                                return EvalItem::Empty;
-                            },
-                            "lambda" => {
-                                if list.len() != 3 {
-                                    panic!("lambda takes 2 arguments.");
-                                }
-                                let arguments_list = match list[1] {
-                                    EvalItem::List(ref args) => args,
-                                    _ => panic!("Not a list!"),
-                                };
-                                let body_list = match list[2] {
-                                    EvalItem::List(ref items) => items,
-                                    _ => panic!("Not a list!"),
-                                };
-                                let body_item = EvalItem::List(body_list.clone());
-                                let lambda_def = LambdaDefinition {
-                                    arguments: arguments_list.clone(),
-                                    body: body_item,
-                                    environment: env.clone(),
-                                };
-                                let lambda_item = EvalItem::Lambda(box lambda_def);
-                                return lambda_item;
-                            },
-                            "if" => {
-                                if list.len() != 4 {
-                                    panic!("if takes 3 arguments.");
-                                }
-                                let test_list = match list[1] {
-                                    EvalItem::List(ref items) => items,
-                                    _ => panic!("Not a list!"),
-                                };
-                                let consec_list = match list[2] {
-                                    EvalItem::List(ref items) => items,
-                                    _ => panic!("Not a list!"),
-                                };
-                                let alt_list = match list[3] {
-                                    EvalItem::List(ref items) => items,
-                                    _ => panic!("Not a list!"),
-                                };
-                                let test_result =
-                                    evaluate(EvalItem::List(test_list.clone()), env);
-                                if test_result == EvalItem::Empty {
-                                    return evaluate(EvalItem::List(alt_list.clone()), env);
-                                } else {
-                                    return evaluate(EvalItem::List(consec_list.clone()), env);
-                                }                                 
-                            },
+                            "quote" => return evaluate_quote(list),
+                            "define" => return evaluate_define(list, env),
+                            "lambda" => return evaluate_lambda(list, env),
+                            "if" => return evaluate_if(list, env),
                             _ => panic!("Unknown keyword!"),
                         }
                     },
