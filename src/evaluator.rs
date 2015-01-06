@@ -1,3 +1,4 @@
+use builtins::evaluate_builtin;
 use evalitem::LambdaDefinition;
 use evalitem::EvalItem;
 use environment::Environment;
@@ -95,7 +96,7 @@ pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
                             "define" => return evaluate_define(list, env),
                             "lambda" => return evaluate_lambda(list, env),
                             "if" => return evaluate_if(list, env),
-                            _ => panic!("Unknown keyword!"),
+                            _ => return evaluate_builtin(keyword, list, env),
                         }
                     },
                     _ => panic!("Must start list evaluation with keyword!"),
@@ -209,4 +210,16 @@ mod test {
         assert_eq!(expected, evaluate(item_with_if, &mut env));
     }
 
+    #[test]
+    fn evaluate_builtin() {
+        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let item = EvalItem::List(vec!(
+            EvalItem::Value("+".to_string()),
+            EvalItem::Value("1".to_string()),
+            EvalItem::Value("2".to_string())));
+
+        let expected = EvalItem::Value("3".to_string());
+        assert_eq!(expected, evaluate(item, &mut env));
+    }
+    
 }

@@ -1,3 +1,4 @@
+mod builtins;
 mod evaluator;
 mod environment;
 mod evalitem;
