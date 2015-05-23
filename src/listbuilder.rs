@@ -1,13 +1,13 @@
 use evalitem::EvalItem;
 
-fn build_list(tokens: &Vec<String>, index_init: uint) -> (uint, EvalItem) {
+fn build_list(tokens: &Vec<String>, index_init: u32) -> (u32, EvalItem) {
     if tokens.is_empty() { return (0, EvalItem::Empty) }
     let mut item = vec![];
     let mut index = index_init;
     loop {
-        if index >= tokens.len() { return (index, EvalItem::List(item)) }
-        let token_chars = tokens[index].as_slice();
-        match token_chars {
+        if (index >= tokens.len() as u32) { return (index, EvalItem::List(item)) }
+        let ref token_chars = tokens[index as usize];
+        match token_chars.as_ref() {
             "(" => {
                 let (index_updated, new_item) = build_list(tokens, index + 1);
                 index = index_updated;

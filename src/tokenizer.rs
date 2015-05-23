@@ -3,30 +3,30 @@ pub fn tokenize<'r>(program: &'r String) -> Vec<String> {
     let mut tokens = vec![];
     let mut buf = String::new();
     
-    for c in program.as_slice().chars() {
+    for c in program.chars() {
         match c {
             '(' => {
-                if buf.len() > 0 && !buf.as_slice().starts_with(";") {
+                if buf.len() > 0 && !buf.starts_with(";") {
                     tokens.push(buf.clone());
                     buf.clear();
                 }
                 tokens.push("(".to_string());
             },
             ')' => {
-                if buf.len() > 0 && !buf.as_slice().starts_with(";") {
+                if buf.len() > 0 && !buf.starts_with(";") {
                     tokens.push(buf.clone());
                     buf.clear();
                 }
                 tokens.push(")".to_string());
             },
             ' '|'\t' => {
-                if buf.len() > 0 && !buf.as_slice().starts_with(";"){
+                if buf.len() > 0 && !buf.starts_with(";"){
                     tokens.push(buf.clone());
                     buf.clear();
                 }
             },
             '\n' => {
-                if buf.len() > 0 && buf.as_slice().starts_with(";"){
+                if buf.len() > 0 && buf.starts_with(";"){
                     buf.clear();
                 }
             }

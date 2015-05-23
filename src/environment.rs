@@ -1,7 +1,7 @@
 use evalitem::EvalItem;
 use std::collections::HashMap;
 
-#[deriving(Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Environment {
     pub vars: HashMap<String, EvalItem>,
     pub outer: Option<Box<Environment>>,
@@ -14,7 +14,7 @@ impl Environment {
 
     pub fn find_value(&self, name: &str) -> Option<&EvalItem> {
         if !self.vars.contains_key(&name.to_string()) { return None; }
-        Some(&self.vars[name.to_string()])
+        Some(&self.vars[name])
     }
 
     pub fn find_environment_with_var(&self, name: &str) -> Option<&Environment> {
@@ -49,9 +49,9 @@ mod test {
 
     #[test]
     fn nested_environments() {
-        let mut env3 = box Environment { vars: HashMap::new(), outer: None };
+        let mut env3 = Box::new(Environment { vars: HashMap::new(), outer: None });
         env3.add("theVar", EvalItem::Empty);
-        let mut env2 = box Environment { vars: HashMap::new(), outer: Some(env3) };
+        let mut env2 = Box::new(Environment { vars: HashMap::new(), outer: Some(env3) });
         let mut env = Environment { vars: HashMap::new(), outer: Some(env2) };
         env.add("theOtherVar",                
                 EvalItem::List(vec!(EvalItem::Value(

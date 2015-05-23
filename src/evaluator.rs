@@ -20,7 +20,7 @@ fn evaluate_define(list: &Vec<EvalItem>, env: &mut Box<Environment>) -> EvalItem
         EvalItem::Value(val) => val,
         _ => panic!("Must give string as name!"),
     };
-    env.add(name_to_add.as_slice(), item_to_add);
+    env.add(&name_to_add, item_to_add);
     return EvalItem::Empty;
 }
 
@@ -42,7 +42,7 @@ fn evaluate_lambda(list: &Vec<EvalItem>, env: &mut Box<Environment>) -> EvalItem
         body: body_item,
         environment: env.clone(),
     };
-    let lambda_item = EvalItem::Lambda(box lambda_def);
+    let lambda_item = EvalItem::Lambda(Box::new(lambda_def));
     return lambda_item;
 }
 
@@ -72,16 +72,16 @@ fn evaluate_if(list: &Vec<EvalItem>, env: &mut Box<Environment>) -> EvalItem {
 }
 
 fn evaluate_value(item: &EvalItem, value: &String, env: &mut Box<Environment>) -> EvalItem {
-    match env.find_environment_with_var(value.as_slice()) {
+    match env.find_environment_with_var(value) {
         Some(env_with_var) =>
             return env_with_var.find_value(
-                value.as_slice()).unwrap().clone(),
+                value).unwrap().clone(),
         None => return item.clone(),
     }
 }
 
 pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
-    let mut loops = 0i;
+    let mut loops = 0u32;
     loop {
         if loops > 100 { panic!("Max recursion reached!"); }
 
@@ -91,7 +91,7 @@ pub fn evaluate(item: EvalItem, env: &mut Box<Environment>) -> EvalItem {
                 if list.is_empty() { return EvalItem::Empty; }
                 match list[0] {
                     EvalItem::Value(ref keyword) => {
-                        match keyword.as_slice() {
+                        match keyword.as_ref() {
                             "quote" => return evaluate_quote(list),
                             "define" => return evaluate_define(list, env),
                             "lambda" => return evaluate_lambda(list, env),
@@ -117,7 +117,7 @@ mod test {
     
     #[test]
     fn evaluate_item() {
-        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let mut env = Box::new(Environment { vars: HashMap::new(), outer: None });
         let item = EvalItem::Value("ping".to_string());
         assert_eq!(EvalItem::Value("ping".to_string()),
                    evaluate(item, &mut env));
@@ -125,7 +125,7 @@ mod test {
 
     #[test]
     fn evaluate_quote() {
-        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let mut env = Box::new(Environment { vars: HashMap::new(), outer: None });
         let item = EvalItem::List(vec!(
             EvalItem::Value("quote".to_string()),
             EvalItem::Value("1".to_string()),
@@ -138,7 +138,7 @@ mod test {
 
     #[test]
     fn evaluate_define_value() {
-        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let mut env = Box::new(Environment { vars: HashMap::new(), outer: None });
         let item = EvalItem::List(vec!(
             EvalItem::Value("define".to_string()),
             EvalItem::Value("one".to_string()),
@@ -149,7 +149,7 @@ mod test {
 
     #[test]
     fn evaluate_define_solve() {
-        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let mut env = Box::new(Environment { vars: HashMap::new(), outer: None });
         let item = EvalItem::List(vec!(
             EvalItem::Value("define".to_string()),
             EvalItem::Value("one".to_string()),
@@ -167,7 +167,7 @@ mod test {
 
     #[test]
     fn evaluate_lambda_definition() {
-        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let mut env = Box::new(Environment { vars: HashMap::new(), outer: None });
         let item = EvalItem::List(vec!(
             EvalItem::Value("lambda".to_string()),
             EvalItem::List(vec!(
@@ -177,20 +177,20 @@ mod test {
                 EvalItem::Value("one".to_string()))),
             ));
 
-        let expected_lambda = box LambdaDefinition {
+        let expected_lambda = Box::new(LambdaDefinition {
             arguments: vec!(
                 EvalItem::Value("arg1".to_string()),
                 EvalItem::Value("arg2".to_string())),
             body: EvalItem::List(vec!(
                 EvalItem::Value("one".to_string()))),
             environment: env.clone(),
-        };
+        });
         assert_eq!(EvalItem::Lambda(expected_lambda), evaluate(item, &mut env));
     }
 
     #[test]
     fn evaluate_if_true() {
-        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let mut env = Box::new(Environment { vars: HashMap::new(), outer: None });
         let item_with_if = EvalItem::List(vec!(
             EvalItem::Value("if".to_string()),
             EvalItem::List(vec!(
@@ -212,7 +212,7 @@ mod test {
 
     #[test]
     fn evaluate_builtin() {
-        let mut env = box Environment { vars: HashMap::new(), outer: None };
+        let mut env = Box::new(Environment { vars: HashMap::new(), outer: None });
         let item = EvalItem::List(vec!(
             EvalItem::Value("+".to_string()),
             EvalItem::Value("1".to_string()),

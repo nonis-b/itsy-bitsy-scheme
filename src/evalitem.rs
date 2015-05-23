@@ -1,14 +1,14 @@
 use environment::Environment;
 use std::fmt;
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct LambdaDefinition {
     pub arguments: Vec<EvalItem>,
     pub body: EvalItem,
     pub environment: Box<Environment>,
 }
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub enum EvalItem {
     List(Vec<EvalItem>),
     Value(String),
@@ -16,13 +16,24 @@ pub enum EvalItem {
     Empty,
 }
 
-impl fmt::Show for EvalItem {
+impl fmt::Display for EvalItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            List(ref n) => write!(f, "[{}]", n),
-            Value(ref n) => write!(f, "<{}>", *n),
-            Lambda(ref n) => write!(f, "Lambda"),
-            Empty => write!(f, "Empty"),
+            EvalItem::List(ref n) => write!(f, "[{:?}]", n),
+            EvalItem::Value(ref n) => write!(f, "<{}>", *n),
+            EvalItem::Lambda(ref n) => write!(f, "Lambda"),
+            EvalItem::Empty => write!(f, "Empty"),
+        }
+    }
+}
+
+impl fmt::Debug for EvalItem {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            EvalItem::List(ref n) => write!(f, "[{:?}]", n),
+            EvalItem::Value(ref n) => write!(f, "<{}>", *n),
+            EvalItem::Lambda(ref n) => write!(f, "Lambda"),
+            EvalItem::Empty => write!(f, "Empty"),
         }
     }
 }
@@ -30,21 +41,21 @@ impl fmt::Show for EvalItem {
 impl PartialEq for EvalItem {
     fn eq(&self, other: &EvalItem) -> bool {
         match *self {
-            List(ref n) => {
+            EvalItem::List(ref n) => {
                 match *other {
-                    List(ref o) => n == o,                    
+                    EvalItem::List(ref o) => n == o,                    
                     _ => false,
                 }
             },
-            Value(ref n) => {
+            EvalItem::Value(ref n) => {
                 match *other {
-                    Value(ref o) => n == o,                    
+                    EvalItem::Value(ref o) => n == o,                    
                     _ => false,
                 }
             },
-            Lambda(ref lambda) => {
+            EvalItem::Lambda(ref lambda) => {
                 match *other {
-                    Lambda(ref other_lambda) => {
+                    EvalItem::Lambda(ref other_lambda) => {
                         if lambda.arguments != other_lambda.arguments { return false; }
                         if lambda.body != other_lambda.body { return false; }
                         if lambda.environment != other_lambda.environment { return false; }
@@ -53,9 +64,9 @@ impl PartialEq for EvalItem {
                     _ => false,
                 }
             },
-            Empty => {
+            EvalItem::Empty => {
                 match *other {
-                    Empty => true,                    
+                    EvalItem::Empty => true,                    
                     _ => false,
                 }
             },
